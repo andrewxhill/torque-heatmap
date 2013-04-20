@@ -35,7 +35,7 @@ L.TileLayer.Torque = L.TileLayer.extend({
                 "    ) as cell " +
                 " ) " +
                 " SELECT  " +
-                "    x, y, log(sum(c)) sums, '{0}' tile ".format(tilePoint.x+":"+tilePoint.y) +
+                "    x, y, {1}(sum(c)) sums, '{0}' tile ".format(tilePoint.x+":"+tilePoint.y, this.options.agg) +
                 " FROM ( " +
                 "    SELECT " +
                 "      round(CAST (st_x(st_centroid(hgrid.cell)) AS numeric),5) x, round(CAST (st_y(st_centroid(hgrid.cell)) AS numeric),5) y, {0} c ".format('count(cartodb_id)') +
