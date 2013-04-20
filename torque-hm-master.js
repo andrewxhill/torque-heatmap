@@ -34,7 +34,7 @@ var TorqueMaster = function(canvas){
         return null;
     }
      
-    this.worker = new Worker(TorqueMaster.getPath()+'torque-worker.js');
+    this.worker = new Worker(TorqueMaster.getPath()+'torque-hm-worker.js');
      
     this.width = this.canvas.width;
     this.height = this.canvas.height;
@@ -193,7 +193,7 @@ TorqueMaster.getPath = function() {
     var scriptTags = document.getElementsByTagName("script");
     for (var i=0; i<scriptTags.length; i++) {
         var src = scriptTags[i].src;
-        var pos = src.indexOf("torque.js");
+        var pos = src.indexOf("torque-hm.js");
         if (pos > 0) {
             return src.substring(0, pos);
         }

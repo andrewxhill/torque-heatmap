@@ -33,10 +33,12 @@ L.TileLayer.TorqueMaster = L.Class.extend({
  
     onRenderingStart: function(cb){
         this._onRenderingStart = cb;
+        console.log('start')
     },
  
     onRenderingEnd: function(cb) {
         this._onRenderingEnd = cb;
+        console.log('end')
     },
  
     onAdd: function(map) {
@@ -87,7 +89,9 @@ L.TileLayer.TorqueMaster = L.Class.extend({
     pushData: function(x, y, v) {
         this.data.push({"x":x, "y":y, "v":v});
     },
-     
+    reset: function(){
+        this._redraw();
+    },
     _resetCanvasPosition: function() {
         var bounds = this.map.getBounds();
         var topLeft = this.map.latLngToLayerPoint(bounds.getNorthWest());
@@ -101,7 +105,7 @@ L.TileLayer.TorqueMaster = L.Class.extend({
 
         this._offset = [mx, my];
         this._resolution = [this.map.getSize().x / (nx - mx), this.map.getSize().y / (ny - my)];
-        console.log(this._resolution)
+        
         //topLeft = this.map.layerPointToContainerPoint(topLeft);
  
         L.DomUtil.setPosition(this._div, topLeft);
@@ -117,10 +121,10 @@ L.TileLayer.TorqueMaster = L.Class.extend({
                 // console.log(this.data[i])
                 // console.log(localXY)
                 // localXY = this.map.layerPointToContainerPoint(localXY);
-                console.log(
-                        (Math.floor(this.data[i].x) -  this._offset[0]) * this._resolution[0], 
-                        (Math.floor(this.data[i].y) -  this._offset[1]) * this._resolution[1]
-                    )
+                // console.log(
+                //         (Math.floor(this.data[i].x) -  this._offset[0]) * this._resolution[0], 
+                //         (Math.floor(this.data[i].y) -  this._offset[1]) * this._resolution[1]
+                //     )
                 this.torque.push(
                         // Math.floor(localXY.x), 
                         // Math.floor(localXY.y), 
