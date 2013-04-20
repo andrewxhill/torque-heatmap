@@ -184,7 +184,7 @@ TorqueMaster.hsla2rgba = function(h, s, l, a){
         b = hue2rgb(p, q, h - 1/3);
     }
  
-    return [r * 255, g * 255, b * 255, 255 * ((r * 255 )/255 + (g * 200)/255 + (b * 150)/255) ] ; //a * 255];
+    return [r * 255, g * 255, b * 255, 305 * ((r * 255 )/255 + (g * 200)/255 + (b * 150)/255) - 50 ] ; //a * 255];
 }
  
 TorqueMaster.LINEAR = 1;
