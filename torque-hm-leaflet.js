@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-_OFFS = 2 * Math.PI * 6378137 / 2.0;
+_OFFS = 2 * Math.PI * 6378137 / 2.0 / 180.0;
  
 L.TileLayer.TorqueMaster = L.Class.extend({
  
@@ -101,11 +101,11 @@ L.TileLayer.TorqueMaster = L.Class.extend({
         var bounds = this.map.getBounds();
         var topLeft = this.map.latLngToLayerPoint(bounds.getNorthWest());
 
-        var mx = bounds.getNorthWest().lng * _OFFS / 180.0
-        var my = (Math.log( Math.tan((90 + bounds.getNorthWest().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS / 180.0
+        var mx = bounds.getNorthWest().lng * _OFFS 
+        var my = (Math.log( Math.tan((90 + bounds.getNorthWest().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS 
 
-        var nx = bounds.getSouthEast().lng * _OFFS / 180.0
-        var ny = (Math.log( Math.tan((90 + bounds.getSouthEast().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS / 180.0
+        var nx = bounds.getSouthEast().lng * _OFFS 
+        var ny = (Math.log( Math.tan((90 + bounds.getSouthEast().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS =
         
 
         this._offset = [mx, my];
