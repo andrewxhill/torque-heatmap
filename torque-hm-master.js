@@ -141,10 +141,12 @@ TorqueMaster.prototype._render = function(f_value_color){
 };
  
 TorqueMaster.prototype.clear = function(){
-    this.data = {};
     this.value = {};
      
     this.canvas.getContext("2d").clearRect(0, 0, this.width, this.height);
+};
+TorqueMaster.prototype.clearData = function(){
+    this.data = {};
 };
  
 TorqueMaster.prototype.exportImage = function() {

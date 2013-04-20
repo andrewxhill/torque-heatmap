@@ -86,11 +86,16 @@ L.TileLayer.TorqueMaster = L.Class.extend({
         this.map.getPanes().overlayPane.appendChild(this._div);
     },
  
-    pushData: function(x, y, v) {
+    pushDatax: function(x, y, v) {
         this.data.push({"x":x, "y":y, "v":v});
     },
-    reset: function(){
-        this._redraw();
+    pushData: function(xy, data) {
+        for (var i = 0; i < data.length; i++){
+            this.data.push({"x":data[i].x, "y":data[i].y, "v":data[i].v, "xy": xy});
+        }
+    },
+    reset: function(viz){
+        if (viz !== null) this._redraw(null, viz);
     },
     _resetCanvasPosition: function() {
         var bounds = this.map.getBounds();
@@ -111,28 +116,31 @@ L.TileLayer.TorqueMaster = L.Class.extend({
         L.DomUtil.setPosition(this._div, topLeft);
     },
  
-    _redraw: function() {
+    _redraw: function(fn, viz) {
         this._resetCanvasPosition();
-        this.torque.clear();
+        this.torque.clearData();
         if (this.data.length > 0) {
-            for (var i=0, l=this.data.length; i<l; i++) {
-                // var lonlat = new L.LatLng(51.5171,-0.1062);
-                // var localXY = this.map.latLngToLayerPoint(lonlat);
-                // console.log(this.data[i])
-                // console.log(localXY)
-                // localXY = this.map.layerPointToContainerPoint(localXY);
-                // console.log(
-                //         (Math.floor(this.data[i].x) -  this._offset[0]) * this._resolution[0], 
-                //         (Math.floor(this.data[i].y) -  this._offset[1]) * this._resolution[1]
-                //     )
-                this.torque.push(
-                        // Math.floor(localXY.x), 
-                        // Math.floor(localXY.y), 
-                        Math.floor((this.data[i].x -  this._offset[0]) * this._resolution[0]), 
-                        Math.floor((this.data[i].y -  this._offset[1]) * this._resolution[1]),
-                        this.data[i].v);
+            if (viz != null) {
+                var n = [];
+                for (var i=0, l=this.data.length; i<l; i++) {
+                    if (viz.indexOf(this.data[i].xy) > -1){
+                        n.push(this.data[i])
+                        this.torque.push(
+                                Math.floor((this.data[i].x -  this._offset[0]) * this._resolution[0]), 
+                                Math.floor((this.data[i].y -  this._offset[1]) * this._resolution[1]),
+                                this.data[i].v);
+                    }
+                }
+                this.data = n;
+            } else {
+                for (var i=0, l=this.data.length; i<l; i++) {
+                        this.torque.push(
+                                Math.floor((this.data[i].x -  this._offset[0]) * this._resolution[0]), 
+                                Math.floor((this.data[i].y -  this._offset[1]) * this._resolution[1]),
+                                this.data[i].v);
+                }
             }
- 
+            this.torque.clear();
             this.torque.render(this._step, this._degree, this._colorscheme);
         }
         return this;

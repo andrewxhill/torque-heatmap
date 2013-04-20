@@ -20,10 +20,9 @@
             function init(){
               var map = new L.Map("map");
               var markerLayers = new L.LayerGroup();
-                var cloudmadeUrl = 'http://{s}.tile.cloudmade.com/8ee2a50541944fb9bcedded5165f09d9/997/256/{z}/{x}/{y}.png',
-                    cloudmadeAttrib = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
-                    cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttrib});
-                map.addLayer(cloudmade);
+                var url = "https://dnv9my2eseobd.cloudfront.net/v3/cartodb.map-uulyudas/{z}/{x}/{y}.png",
+                    basemap = new L.TileLayer(url, {maxZoom: 18});
+                map.addLayer(basemap);
 
                 map.setView(new L.LatLng(51.5171,-0.1062), 14);
                 var torquemap = new L.TileLayer.Torque({map: map, user: 'pulsemaps', table: 'probes_20130322_innerlondon', resolution: 16, steps: 0.1, agg: 'log'});

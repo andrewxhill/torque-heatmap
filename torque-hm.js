@@ -14,13 +14,17 @@ L.TileLayer.Torque = L.TileLayer.extend({
 
     this.options.map.addLayer(this._master);
 
-    this._layers = 0;
+    this._layerc = 0;
   },
   _tracker: function(i) {
     //draw the canvas when complete
-    this._layers = this._layers + i;
-    if (this._layers == 0){
-        this._master.reset()
+    this._layerc = this._layerc + i;
+    if (this._layerc == 0){
+        var r = [];
+        for (k in this._tiles){
+          r.push(k);
+        }
+        this._master.reset(r)
     }
   },
   _loadTile: function (tile, tilePoint) {
@@ -35,7 +39,7 @@ L.TileLayer.Torque = L.TileLayer.extend({
                 "    ) as cell " +
                 " ) " +
                 " SELECT  " +
-                "    x, y, {1}(sum(c)) sums, '{0}' tile ".format(tilePoint.x+":"+tilePoint.y, this.options.agg) +
+                "    x, y, {1}(sum(c)) v, '{0}' xy ".format(tilePoint.x+":"+tilePoint.y, this.options.agg) +
                 " FROM ( " +
                 "    SELECT " +
                 "      round(CAST (st_x(st_centroid(hgrid.cell)) AS numeric),5) x, round(CAST (st_y(st_centroid(hgrid.cell)) AS numeric),5) y, {0} c ".format('count(cartodb_id)') +
@@ -56,23 +60,30 @@ L.TileLayer.Torque = L.TileLayer.extend({
       this.tileDrawn(tile);
     }
   },
-  _redrawTile: function (data) {
-    for(var i=0,l=data.rows.length; i<l; i++) {
-        this._master.pushData(Math.floor(data.rows[i].x), Math.floor((data.rows[i].y)), data.rows[i].sums);
+  _redrawTile: function (data, z) {
+    if (data.rows.length>0){  
+      this._master.pushData(data.rows[0].xy, data.rows);
     }
+    // for(var i=0,l=data.rows.length; i<l; i++) {
+    //     this._master.pushData(Math.floor(data.rows[i].x), Math.floor((data.rows[i].y)), data.rows[i].sums);
+    // }
     this._tracker(-1);
   },
-  drawTile: function(data, tile, zoom){
+  _unloadTile: function(data, tile, zoom){
+    console.log('redraw', zoom)
     // console.log(this)
     // this._master._render();
   },
   redraw: function () {
+    console.log('redraw')
     var tiles = this._tiles;
 
     for (var i in tiles) {
       if (tiles.hasOwnProperty(i)) {
         // console.log('rer')
         this._redrawTile(tiles[i]);
+      } else {
+        console.log(i);
       }
     }
     // TODO, can I do data remove here?
