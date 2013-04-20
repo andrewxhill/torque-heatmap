@@ -101,11 +101,11 @@ L.TileLayer.TorqueMaster = L.Class.extend({
         var bounds = this.map.getBounds();
         var topLeft = this.map.latLngToLayerPoint(bounds.getNorthWest());
 
-        var mx = bounds.getNorthWest().lng * _OFFS 
-        var my = (Math.log( Math.tan((90 + bounds.getNorthWest().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS 
+        var mx = bounds.getNorthWest().lng * _OFFS ;
+        var my = (Math.log( Math.tan((90 + bounds.getNorthWest().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS ;
 
-        var nx = bounds.getSouthEast().lng * _OFFS 
-        var ny = (Math.log( Math.tan((90 + bounds.getSouthEast().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS =
+        var nx = bounds.getSouthEast().lng * _OFFS ;
+        var ny = (Math.log( Math.tan((90 + bounds.getSouthEast().lat) * Math.PI / 360.0 )) / (Math.PI / 180.0)) * _OFFS ;
         
 
         this._offset = [mx, my];
