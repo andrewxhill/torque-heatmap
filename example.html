@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf8" />
+        <title>Torque on Leaflet</title>
+
+        <link rel="stylesheet" href="http://leaflet.cloudmade.com/dist/leaflet.css" />
+        <script src="http://leaflet.cloudmade.com/dist/leaflet.js" type="text/javascript"></script>
+        <script type="text/javascript" src="http://psousa.net/demos/maps-and-boardgames-part-3/scripts/projections.js"></script>
+        <script type="text/javascript" src="torque.js"></script>
+        <script type="text/javascript" src="torque-master.js"></script>
+        <script type="text/javascript" src="torque-leaflet.js"></script>
+        <script src="http://libs.cartocdn.com/cartodb.js/v2/cartodb.js"></script>
+
+        <style type="text/css">
+            #map{
+            }
+        </style>
+
+        <script type="text/javascript">
+            function init(){
+              var map = new L.Map("map");
+              var markerLayers = new L.LayerGroup();
+                var cloudmadeUrl = 'http://{s}.tile.cloudmade.com/8ee2a50541944fb9bcedded5165f09d9/997/256/{z}/{x}/{y}.png',
+                    cloudmadeAttrib = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade',
+                    cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttrib});
+                map.addLayer(cloudmade);
+
+                map.setView(new L.LatLng(51.5171,-0.1062), 14);
+
+                var torquemap = new L.TileLayer.TorqueMaster({},{'step':0.5, 'degree':TorqueMaster.LINEAR, 'opacity':0.7});
+
+                // torquemap.onRenderingStart(function(){
+                //     document.getElementById("status").innerHTML ='rendering';  
+                // });
+                // torquemap.onRenderingEnd(function(){
+                //     document.getElementById("status").innerHTML = '';  
+                // });
+
+                var sql = new cartodb.SQL({ user: 'pulsemaps', format: 'json'});
+
+                var coord = {x: 8185, y: 5447};
+                var zoom = 14;
+                var resolution = 8; //pixel res
+                var table = 'pulsetest'; //'probes_20130322_innerlondon';
+                var countBy = 'count(cartodb_id)';
+                var tileSql = "WITH hgrid AS ( " +
+                "    SELECT CDB_RectangleGrid( " +
+                "       CDB_XYZ_Extent({0}, {1}, {2}), ".format(coord.x, coord.y, zoom) +
+                "       CDB_XYZ_Resolution({0}) * {1}, ".format(zoom, resolution) +
+                "       CDB_XYZ_Resolution({0}) * {1} ".format(zoom, resolution) +
+                "    ) as cell " +
+                " ) " +
+                " SELECT  " +
+                "    x, y, array_agg(c) vals, sum(c) sums" +
+                " FROM ( " +
+                "    SELECT " +
+                "      round(CAST (st_xmax(hgrid.cell) AS numeric),4) x, round(CAST (st_ymax(hgrid.cell) AS numeric),4) y, {0} c ".format(countBy) +
+                "    FROM " +
+                "        hgrid, {0} i ".format(table) +
+                "    WHERE " +
+                "        ST_Intersects(i.the_geom_webmercator, hgrid.cell) " +
+                "    GROUP BY " +
+                "        hgrid.cell LIMIT 111" +
+                " ) f GROUP BY x, y";
+                
+                sql.execute("SELECT x,y,sums FROM torquetest LIMIT 11")
+                    .done(function(data) {
+                        for(var i=0,l=data.rows.length; i<l; i++) {
+                            torquemap.pushData(Math.floor(data.rows[i].x), Math.floor((data.rows[i].y)), data.rows[i].sums);
+                        }
+                        map.addLayer(torquemap);
+                    });
+            }
+
+        </script>
+    </head>
+
+    <body onload="init();">
+        <div>
+            <h1>Heatcanvas for Leaflet</h1>
+            <p>This is
+            a <a href="https://github.com/sunng87/torque">torque</a>
+            layer
+            for <a href="http://leaflet.cloudmade.com/">leaflet</a>
+            map api.</p>
+            <p id="status"></p>
+        </div>
+        <div id="map" style="width:850px; height:500px;"></div>
+    </body>
+</html>
