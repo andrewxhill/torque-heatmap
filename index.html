@@ -3,15 +3,11 @@
     <head>
         <meta charset="utf8" />
         <title>Torque meets heatmaps on Leaflet</title>
-<!-- 
-        <link rel="stylesheet" href="http://leaflet.cloudmade.com/dist/leaflet.css" /> -->
-        
-        <link rel="stylesheet" href="leaflet.css" />
-<!-- 
-        <script src="http://leaflet.cloudmade.com/dist/leaflet.js" type="text/javascript"></script>
-         -->
-        <script src="leaflet.js" type="text/javascript"></script>
 
+        <link rel="stylesheet" href="http://leaflet.cloudmade.com/dist/leaflet.css" />
+        
+        <script src="http://leaflet.cloudmade.com/dist/leaflet.js" type="text/javascript"></script>
+        
         <script type="text/javascript" src="torque-hm.js"></script>
         <script type="text/javascript" src="torque-hm-master.js"></script>
         <script type="text/javascript" src="torque-hm-leaflet.js"></script>
@@ -34,7 +30,7 @@
                     basemap = new L.TileLayer(url, {maxZoom: 18});
                 map.addLayer(basemap);
 
-                map.setView(new L.LatLng(40.7,-73.975), 11);
+                // map.setView(new L.LatLng(40.7,-73.975), 11);
                 var torquemap = new L.TileLayer.Torque({map: map, user: 'viz2', table: 'sfrisk_dates', resolution: 16, steps: 0.1, agg: 'log'});
                 map.addLayer(torquemap);
             }
