@@ -45,6 +45,20 @@ var TorqueMaster = function(canvas){
     this.data = {};
 };
  
+TorqueMaster.prototype.drag = function( ofs ) {
+    var ctx = this.canvas.getContext("2d");
+    var imageData = ctx.getImageData(0, 0, this.width, this.height);
+    ctx.clearRect(0, 0, this.width, this.height);
+    ctx.putImageData(imageData, ofs[0], ofs[1]);
+};
+
+// TorqueMaster.prototype.zoom = function( scale ) {
+//     var ctx = this.canvas.getContext("2d");
+//     var imageData = ctx.getImageData(0, 0, this.width, this.height);
+//     ctx.clearRect(0, 0, this.width, this.height);
+//     ctx.putImageData(imageData, 0, 0, 0, 0, this.width * scale, this.height * scale);
+// };
+
 TorqueMaster.prototype.resize = function( w, h ) {
   this.width = this.canvas.width = w;
   this.height = this.canvas.height = h;
@@ -102,7 +116,7 @@ TorqueMaster.prototype._render = function(f_value_color){
     f_value_color = f_value_color || TorqueMaster.defaultValue2Color;
  
     var ctx = this.canvas.getContext("2d");
-    ctx.clearRect(0, 0, this.width, this.height);
+    // ctx.clearRect(0, 0, this.width, this.height);
  
     defaultColor = this.bgcolor || [0, 0, 0, 255];
     defaultColor = [0, 0, 0, 0];

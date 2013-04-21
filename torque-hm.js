@@ -1,7 +1,7 @@
 
 L.TileLayer.Torque = L.TileLayer.extend({
   options: {
-    async: false
+    async: true
   },
 
   initialize: function (options) {
@@ -9,10 +9,10 @@ L.TileLayer.Torque = L.TileLayer.extend({
     L.setOptions(this, options);
 
     //TODO deal with options
-    this._master = new L.TileLayer.TorqueMaster({},{'step':this.options.steps, 'degree':TorqueMaster.LINEAR, 'opacity':0.6});
+    this._master = new L.TileLayer.TorqueMaster({},{map: this.options.map, 'step':this.options.steps, 'degree':TorqueMaster.LINEAR, 'opacity':0.6});
     this._sql = new cartodb.SQL({ user: this.options.user, format: 'json'});
 
-    this.options.map.addLayer(this._master);
+    // this.options.map.addLayer(this._master);
 
     this._layerc = 0;
   },
@@ -24,6 +24,7 @@ L.TileLayer.Torque = L.TileLayer.extend({
         for (k in this._tiles){
           r.push(k);
         }
+        // console.log(r)
         this._master.reset(r)
     }
   },
@@ -48,9 +49,9 @@ L.TileLayer.Torque = L.TileLayer.extend({
                 "    WHERE " +
                 "        ST_Intersects(i.the_geom_webmercator, hgrid.cell) " +
                 "    GROUP BY " +
-                "        hgrid.cell" +
+                "        hgrid.cell " +
                 " ) f GROUP BY x, y";
-
+    
     this._sql.execute(tileSql)
        .done(function(data) {
             that._redrawTile(data);
@@ -63,16 +64,10 @@ L.TileLayer.Torque = L.TileLayer.extend({
   _redrawTile: function (data, z) {
     if (data.rows.length>0){  
       this._master.pushData(data.rows[0].xy, data.rows);
+      //TODO create a function that just redraws the 
+      // tile+stepSize buffer area of the master canvas on new data load
     }
-    // for(var i=0,l=data.rows.length; i<l; i++) {
-    //     this._master.pushData(Math.floor(data.rows[i].x), Math.floor((data.rows[i].y)), data.rows[i].sums);
-    // }
     this._tracker(-1);
-  },
-  _unloadTile: function(data, tile, zoom){
-    console.log('redraw', zoom)
-    // console.log(this)
-    // this._master._render();
   },
   redraw: function () {
     console.log('redraw')
