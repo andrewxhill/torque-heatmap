@@ -32,25 +32,26 @@ L.TileLayer.Torque = L.TileLayer.extend({
     tile._layer = this;
     this._tracker(1);
     var that = this;
-    var tileSql = "WITH hgrid AS ( " +
-                "    SELECT CDB_RectangleGrid( " +
-                "       CDB_XYZ_Extent({0}, {1}, {2}), ".format(tilePoint.x, tilePoint.y, this._map._zoom) +
-                "       CDB_XYZ_Resolution({0}) * {1}, ".format(this._map._zoom, this.options.resolution) +
-                "       CDB_XYZ_Resolution({0}) * {1} ".format(this._map._zoom, this.options.resolution) +
-                "    ) as cell " +
-                " ) " +
-                " SELECT  " +
-                "    x, y, {1}(sum(c)) v, '{0}' xy ".format(tilePoint.x+":"+tilePoint.y, this.options.agg) +
-                " FROM ( " +
-                "    SELECT " +
-                "      round(CAST (st_x(st_centroid(hgrid.cell)) AS numeric),5) x, round(CAST (st_y(st_centroid(hgrid.cell)) AS numeric),5) y, {0} c ".format('count(cartodb_id)') +
-                "    FROM " +
-                "        hgrid, {0} i ".format(this.options.table) +
-                "    WHERE " +
-                "        ST_Intersects(i.the_geom_webmercator, hgrid.cell) " +
-                "    GROUP BY " +
-                "        hgrid.cell " +
-                " ) f GROUP BY x, y";
+    var tileSql = "WITH grid AS (\n" +
+                   " SELECT CDB_RectangleGrid( " +
+                      " CDB_XYZ_Extent({0}, {1}, {2}), ".format(tilePoint.x, tilePoint.y, this._map._zoom) +
+                      " CDB_XYZ_Resolution({0}) * {1}, ".format(this._map._zoom, this.options.resolution) +
+                      " CDB_XYZ_Resolution({0}) * {1} ".format(this._map._zoom, this.options.resolution) +
+                   " ) as cell " +
+                " ),\n" +
+                " hgrid AS (\n" +
+                   " SELECT cell, " +
+                     " round(CAST (st_x(st_centroid(cell)) AS numeric),5) x, " +
+                     " round(CAST (st_y(st_centroid(cell)) AS numeric),5) y " +
+                   " FROM grid " +
+                " )\n" +
+                "SELECT g.x, g.y, {1}({0}) v, '{2}'::text xy "
+                  .format('count(cartodb_id)', this.options.agg, tilePoint.x+":"+tilePoint.y) +
+                "FROM hgrid g, {0} i\n".format(this.options.table) +
+                "WHERE i.the_geom_webmercator && CDB_XYZ_Extent({0}, {1}, {2})\n"
+                  .format(tilePoint.x, tilePoint.y, this._map._zoom) +
+                  " AND ST_Intersects(i.the_geom_webmercator, g.cell)\n" +
+                "GROUP BY g.x, g.y ";
     
     this._sql.execute(tileSql)
        .done(function(data) {
