@@ -10,7 +10,9 @@ L.TileLayer.Torque = L.TileLayer.extend({
 
     //TODO deal with options
     this._master = new L.TileLayer.TorqueMaster({},{map: this.options.map, 'step':this.options.steps, 'degree':TorqueMaster.LINEAR, 'opacity':0.6});
-    this._sql = new cartodb.SQL({ user: this.options.user, format: 'json'});
+    var host = this.options.sqlapi_domain || 'cartodb.com';
+        host += ':' + ( this.options.sqlapi_port || '80' );
+    this._sql = new cartodb.SQL({ user: this.options.user, format: 'json', host: host, protocol: this.options.sqlapi_protocol, version: this.options.sqlapi_version });
 
     // this.options.map.addLayer(this._master);
 
