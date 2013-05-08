@@ -30,31 +30,86 @@ L.TileLayer.Torque = L.TileLayer.extend({
         this._master.reset(r)
     }
   },
+  _checkPyramid: function(cb) {
+    // Check it there's any pyramid set for this layer
+    var sql = 'SELECT distinct res FROM {0}_pyramid ORDER BY res'.format(this.options.table);
+
+    if ( this._pyramid_check_queue ) {
+        this._pyramid_check_queue.push(cb);
+        return;
+    }
+
+    this._pyramid_check_queue = [ cb ];
+
+    console.log("Pyramid checker: " + sql);
+    var that = this;
+
+    var finish = function() {
+        that._pyramid_checked = 1;
+        _.each(that._pyramid_check_queue, function(c) { c(); });
+        delete that._pyramid_check_queue;
+    }
+
+    this._sql.execute(sql)
+       .done(function(data) {
+            console.log("Pyramid checker response has " + data.rows.length + " rows");
+            if ( data.rows.length ) {
+              that._pyramid_resolutions = [];
+              _.each(data.rows, function(r) {
+                that._pyramid_resolutions.push(r.res);
+              });
+            } 
+            finish();
+       })
+       .error(function(err) {
+            console.log(err);
+            finish();
+       });
+
+  },
   _loadTile: function (tile, tilePoint) {
+
+    var that = this;
+
+    if ( ! that._pyramid_checked ) {
+      this._checkPyramid(function() {
+        that._loadTile(tile, tilePoint);
+      });
+      return;
+    }
+
     tile._layer = this;
     this._tracker(1);
     var that = this;
-    var tileSql = "WITH grid AS (\n" +
-                   " SELECT CDB_RectangleGrid( " +
-                      " CDB_XYZ_Extent({0}, {1}, {2}), ".format(tilePoint.x, tilePoint.y, this._map._zoom) +
-                      " CDB_XYZ_Resolution({0}) * {1}, ".format(this._map._zoom, this.options.resolution) +
-                      " CDB_XYZ_Resolution({0}) * {1} ".format(this._map._zoom, this.options.resolution) +
-                   " ) as cell " +
-                " ),\n" +
-                " hgrid AS (\n" +
-                   " SELECT cell, " +
-                     " round(CAST (st_x(st_centroid(cell)) AS numeric),5) x, " +
-                     " round(CAST (st_y(st_centroid(cell)) AS numeric),5) y " +
-                   " FROM grid " +
-                " )\n" +
-                "SELECT g.x, g.y, {1}({0}) v, '{2}'::text xy "
-                  .format('count(cartodb_id)', this.options.agg, tilePoint.x+":"+tilePoint.y) +
-                "FROM hgrid g, {0} i\n".format(this.options.table) +
+    var tileSql;
+
+    // TODO: query pyramid if the resolution we need is lower than
+    //       the max pyramid resolution
+    if ( this._pyramid_resolutions ) {
+      var res = this._pyramid_resolutions[0];
+      tileSql = "WITH cte AS ( SELECT ST_SnapToGrid(ST_Centroid(ext), "
+          + "CDB_XYZ_Resolution({0})*{1}) g"
+                  . format(this._map._zoom, this.options.resolution) +
+                ", {1}({0}) v " .format('sum((select sum(v) from cdb_torquepixel_dump(v,0)))', this.options.agg) +
+                "FROM {0}\n".format(this.options.table + '_pyramid') +
+                "WHERE ext && CDB_XYZ_Extent({0}, {1}, {2}) AND res = {3}\n"
+                  .format(tilePoint.x, tilePoint.y, this._map._zoom, res) +
+                " GROUP BY g ) SELECT st_x(g) x, st_y(g) y, v, '{0}'::text xy from cte"
+                  . format(tilePoint.x+":"+tilePoint.y);
+    } else {
+      tileSql = "WITH cte AS ( SELECT ST_SnapToGrid(i.the_geom_webmercator, "
+          + "CDB_XYZ_Resolution({0})*{1}) g"
+                  . format(this._map._zoom, this.options.resolution) +
+                ", {1}({0}) v " .format('count(cartodb_id)', this.options.agg) +
+                "FROM {0} i\n".format(this.options.table) +
                 "WHERE i.the_geom_webmercator && CDB_XYZ_Extent({0}, {1}, {2})\n"
                   .format(tilePoint.x, tilePoint.y, this._map._zoom) +
-                  " AND ST_Intersects(i.the_geom_webmercator, g.cell)\n" +
-                "GROUP BY g.x, g.y ";
-    
+                " GROUP BY g ) SELECT st_x(g) x, st_y(g) y, v, '{0}'::text xy from cte"
+                  . format(tilePoint.x+":"+tilePoint.y);
+    }
+
+    //console.log(tileSql);
+
     this._sql.execute(tileSql)
        .done(function(data) {
             that._redrawTile(data);
