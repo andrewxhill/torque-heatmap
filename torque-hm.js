@@ -4,6 +4,13 @@ L.TileLayer.Torque = L.TileLayer.extend({
     async: true
   },
 
+  z_resolution: function(z) {
+    var earth_circumference = 40075017;
+    var tile_size = 256;
+    var full_resolution = earth_circumference/tile_size;
+    return full_resolution / (Math.pow(2,z));
+  },
+
   initialize: function (options) {
       //This will add 50 particles to the array with random positions
     L.setOptions(this, options);
@@ -80,13 +87,20 @@ L.TileLayer.Torque = L.TileLayer.extend({
 
     tile._layer = this;
     this._tracker(1);
-    var that = this;
     var tileSql;
 
-    // TODO: query pyramid if the resolution we need is lower than
-    //       the max pyramid resolution
-    if ( this._pyramid_resolutions ) {
-      var res = this._pyramid_resolutions[0];
+    var zoomResolution = this.z_resolution(this._map._zoom);
+    var geoResolution = zoomResolution * this.options.resolution;
+
+    console.log("We need resolution " + geoResolution);
+
+    // TODO: query pyramid if the resolution we need is lower or equal
+    //       than the max pyramid resolution
+    if ( this._pyramid_resolutions && this._pyramid_resolutions[0] <= geoResolution ) {
+      // pick lowest resolution (higher value)
+      var res, i = this._pyramid_resolutions.length;
+      do res = this._pyramid_resolutions[--i]; while ( res > geoResolution );
+      console.log("Using pyramid resolution " + res + " (among " + this._pyramid_resolutions + ")");
       tileSql = "WITH cte AS ( SELECT ST_SnapToGrid(ST_Centroid(ext), "
           + "CDB_XYZ_Resolution({0})*{1}) g"
                   . format(this._map._zoom, this.options.resolution) +
@@ -97,6 +111,7 @@ L.TileLayer.Torque = L.TileLayer.extend({
                 " GROUP BY g ) SELECT st_x(g) x, st_y(g) y, v, '{0}'::text xy from cte"
                   . format(tilePoint.x+":"+tilePoint.y);
     } else {
+      console.log("Using original table (no pyramid)");
       tileSql = "WITH cte AS ( SELECT ST_SnapToGrid(i.the_geom_webmercator, "
           + "CDB_XYZ_Resolution({0})*{1}) g"
                   . format(this._map._zoom, this.options.resolution) +
@@ -110,6 +125,7 @@ L.TileLayer.Torque = L.TileLayer.extend({
 
     //console.log(tileSql);
 
+    var that = this;
     this._sql.execute(tileSql)
        .done(function(data) {
             that._redrawTile(data);
