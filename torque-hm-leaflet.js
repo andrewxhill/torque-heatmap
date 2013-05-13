@@ -90,8 +90,8 @@ L.TileLayer.TorqueMaster = L.Class.extend({
         this.torque.onRenderingStart = this._onRenderingStart;
         this.torque.onRenderingEnd = this._onRenderingEnd;
         this._div = container;
-        // console.log(map._container.id)
-        document.getElementById('map').appendChild(this._div);
+        //console.log(map._container.id)
+        document.getElementById(this.map._container.id).appendChild(this._div);
         // $('body').append(this._div);
         // this.map.getPanes().overlayPane.appendChild(this._div);
     },
