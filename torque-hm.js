@@ -114,7 +114,7 @@ L.TileLayer.Torque = L.TileLayer.extend({
           + "CDB_XYZ_Resolution({0})*{1}) g"
                   . format(this._map._zoom, this.options.resolution) +
                 ", {1}({0}) v " .format('sum((select sum(v) from cdb_torquepixel_dump(v,0)))', this.options.agg) +
-                "FROM {0}\n".format(this.options.table + '_pyramid') +
+                "FROM {0}\n".format('cdb_pyramid.' + this.options.table ) +
                 "WHERE ext && CDB_XYZ_Extent({0}, {1}, {2}) AND res = {3}\n"
                   .format(tilePoint.x, tilePoint.y, this._map._zoom, res) +
                 " GROUP BY g ) SELECT st_x(g) x, st_y(g) y, v, '{0}'::text xy from cte"
