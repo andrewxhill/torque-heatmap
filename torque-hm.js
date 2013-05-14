@@ -120,7 +120,11 @@ L.TileLayer.Torque = L.TileLayer.extend({
                 " GROUP BY g ) SELECT st_x(g) x, st_y(g) y, v, '{0}'::text xy from cte"
                   . format(tilePoint.x+":"+tilePoint.y);
     } else {
-      console.log("Using original table (no pyramid)");
+      if ( this._pyramid_resolutions ) {
+        console.log("Highest pyramid resolution (" + this._pyramid_resolutions[0] + ") too low for our needs");
+      } else {
+        console.log("Using original table (no pyramid)");
+      }
       tileSql = "WITH cte AS ( SELECT ST_SnapToGrid(i.the_geom_webmercator, "
           + "CDB_XYZ_Resolution({0})*{1}) g"
                   . format(this._map._zoom, this.options.resolution) +
